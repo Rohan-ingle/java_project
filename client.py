@@ -1,25 +1,43 @@
 import socket
+import os
+import time
+from cryptography.fernet import Fernet
 
-def send_file(server_ip, server_port, file_name):
-    # Create a TCP/IP socket
+def send_file(server_ip, server_port, file_path):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # Connect the socket to the server's IP address and port
-        s.connect((server_ip, server_port))
-        print("Connected to server.")
+        with open('key.txt','rb') as key_file:
+            key = key_file.read()
+            print(key)
 
-        # Open the file to send
-        with open(file_name, 'rb') as f:
-            print("Sending file...")
-            # Read the file in chunks and send over the socket
-            data = f.read(1024)
-            while data:
-                s.sendall(data)
-                data = f.read(1024)
-            print("File sent successfully.")
+        while True:
+            try:
+                s.connect((server_ip, server_port))
+                print("Connected to server.")
+                break  # If connection is successful, exit the loop
+            except ConnectionRefusedError:
+                pass  # If connection is refused, try again
+            except KeyboardInterrupt:
+                print("User interrupted the connection attempt.")
+                break  # Exit the loop if user interrupts
+        
+
+        fernet = Fernet(key)
+        # Send file name
+        file_name_bytes = (os.path.basename(file_path)).encode('utf-8')
+        s.sendall(file_name_bytes + b'\n')  # Send file name with '\n' as delimiter
+
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+            encrypted_data = fernet.encrypt(file_data)  # Encrypt the file data
+
+        s.sendall(encrypted_data)  # Send the encrypted data
+        print("Encrypted file sent successfully.")
 
 # Usage
 if __name__ == "__main__":
-    server_ip = 'server_ip_address'  # Change this to the IP address of the server
-    server_port = 12345  # Change this to the port the server is listening on
-    file_name = 'file_to_send.txt'  # Change this to the name of the file you want to send
-    send_file(server_ip, server_port, file_name)
+    # server_ip = '127.0.0.1'
+    # server_port = 5050
+    server_ip = '127.0.0.1'
+    server_port = 5050
+    file_path = r"D:\wallpapers\anime-night-stars-sky-clouds-scenery-digital-art-4k-wallpaper-uhdpaper.com-772@0@i.jpg"
+    send_file(server_ip, server_port, file_path)
