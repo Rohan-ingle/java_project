@@ -2,6 +2,7 @@ import socket
 import os
 import time
 from cryptography.fernet import Fernet
+import tkinter
 
 def send_file(server_ip, server_port, file_path):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -26,18 +27,25 @@ def send_file(server_ip, server_port, file_path):
         file_name_bytes = (os.path.basename(file_path)).encode('utf-8')
         s.sendall(file_name_bytes + b'\n')  # Send file name with '\n' as delimiter
 
-        with open(file_path, 'rb') as f:
-            file_data = f.read()
-            encrypted_data = fernet.encrypt(file_data)  # Encrypt the file data
+        try:
+            with open(file_path, 'rb') as f:
+                file_data = f.read()
+                encrypted_data = fernet.encrypt(file_data)  # Encrypt the file data
 
-        s.sendall(encrypted_data)  # Send the encrypted data
-        print("Encrypted file sent successfully.")
+            s.sendall(encrypted_data)  # Send the encrypted data
+            print("Encrypted file sent successfully.")
+        except:
+            print("The given path points towards a folder or invalid file")
+
+        
 
 # Usage
 if __name__ == "__main__":
     # server_ip = '127.0.0.1'
     # server_port = 5050
-    server_ip = '127.0.0.1'
+    server_ip = '192.168.1.17'
     server_port = 5050
-    file_path = r"D:\wallpapers\anime-night-stars-sky-clouds-scenery-digital-art-4k-wallpaper-uhdpaper.com-772@0@i.jpg"
+
+    
+    file_path = r""
     send_file(server_ip, server_port, file_path)
