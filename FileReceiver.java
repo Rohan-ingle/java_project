@@ -61,7 +61,6 @@ public class FileReceiver {
     public static void main(String[] args) {
         String serverIp = "127.0.0.1";
         int serverPort = 5050;
-        // Use the same key as in Python, should be securely shared/stored
         receiveFile(serverIp, serverPort);
     }
 }
