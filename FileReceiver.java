@@ -61,6 +61,9 @@ public class FileReceiver {
     public static void main(String[] args) {
         String serverIp = "127.0.0.1";
         int serverPort = 5050;
-        receiveFile(serverIp, serverPort);
+        while (true){
+            System.out.println("Waiting for connection");
+            receiveFile(serverIp, serverPort);
+        }
     }
 }
