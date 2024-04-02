@@ -32,3 +32,4 @@ public class AESEncryptor implements Encryptable {
         return decryptedData;
     }
 }
+
