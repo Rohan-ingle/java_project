@@ -7,58 +7,67 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class RandomKeyGenerator {
+// Extend the provided FileOperator class
+public class RandomKeyGenerator extends FileOperator {
+    private int keyLength;
 
-    public static byte[] generateRandomKey(int keyLength) throws NoSuchAlgorithmException {
-        // Create a SecureRandom object
+    // Constructor that takes the file path for the key, the AESEncryptor, and the desired key length
+    public RandomKeyGenerator(String filePath, AESEncryptor encryptor, int keyLength) {
+        super(filePath, encryptor);
+        this.keyLength = keyLength; // AES key length (e.g., 128, 192, 256)
+    }
+
+    // Implementation of the abstract operateFile method
+    @Override
+    void operateFile() throws Exception {
+        byte[] randomKey = generateRandomKey(keyLength); // Generate the AES key
+        System.out.println("Random Key: " + bytesToHex(randomKey));
+        writeToFile(bytesToHex(randomKey), this.filePath); // Write the key to the specified file
+    }
+
+    // Generate a random AES key
+    private byte[] generateRandomKey(int keyLength) throws NoSuchAlgorithmException {
         SecureRandom secureRandom = new SecureRandom();
-
-        // Initialize the KeyGenerator for AES with the specified key length
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(keyLength, secureRandom);
-
-        // Generate a random AES key
         SecretKey secretKey = keyGenerator.generateKey();
-
-        // Get the encoded bytes of the generated key
         return secretKey.getEncoded();
     }
 
-    public static void writeToFile(String content, String filePath) {
-        try {
-            Path path = Paths.get(filePath);
-            Files.write(path, content.getBytes());
-            System.out.println("Content written to file successfully.");
-        } catch (IOException e) {
-            System.err.println("Error writing content to file: " + e.getMessage());
-        }
+    // Write the hexadecimal representation of the key to the file
+    private void writeToFile(String content, String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        Files.write(path, content.getBytes());
+        System.out.println("Content written to file successfully.");
     }
 
-    public static void main(String[] args) {
-        try {
-            // Specify the desired key length in bytes (e.g., 16 for AES-128, 24 for AES-192, 32 for AES-256)
-            int keyLengthBytes = 128;
-
-            // Generate a random key
-            byte[] randomKey = generateRandomKey(keyLengthBytes);
-
-            // Print the generated key as a hexadecimal string
-            System.out.println("Random Key: " + bytesToHex(randomKey));
-            String content = bytesToHex(randomKey);
-            String filePath = "key.txt";
-            writeToFile(content, filePath);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Utility method to convert byte array to hexadecimal string
-    private static String bytesToHex(byte[] bytes) {
+    // Convert byte array to a hexadecimal string
+    private String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
     }
-}
 
+    // Main method for testing
+    public static void main(String[] args) {
+        String filePath = "key.txt"; // Destination file for the key
+        int keyLength = 128; // AES key length
+
+        // Generate a temporary key for AESEncryptor instantiation
+        byte[] tempKey = new byte[keyLength / 8]; // Divide by 8 to convert bits to bytes
+        new SecureRandom().nextBytes(tempKey); // Fill tempKey with random bytes
+
+        // Instantiate AESEncryptor with the temporary key
+        AESEncryptor encryptor = new AESEncryptor(tempKey);
+
+        RandomKeyGenerator keyGenerator = new RandomKeyGenerator(filePath, encryptor, keyLength);
+        try {
+            keyGenerator.operateFile(); // Generate the key and write to the file
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}

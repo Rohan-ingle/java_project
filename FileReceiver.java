@@ -43,10 +43,17 @@ public class FileReceiver {
                 byte[] decryptedBytes = cipher.doFinal();
                 fileDataStream.write(decryptedBytes);
 
+                File directory = new File("./received_files");
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                    System.out.println("Directory created: " + directory.getAbsolutePath());
+                }
+
                 // Write received file data to file
                 try (FileOutputStream fileOutputStream = new FileOutputStream("./received_files/" + fileName)) {
                     fileOutputStream.write(fileDataStream.toByteArray());
                 }
+
 
                 System.out.println("File received and decrypted successfully.");
 
