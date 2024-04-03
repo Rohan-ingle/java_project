@@ -1,3 +1,6 @@
+package fileOps;
+
+import encryption.AESEncryptor;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
@@ -52,8 +55,8 @@ public class RandomKeyGenerator extends FileOperator {
 
     // Main method for testing
     public static void main(String[] args) {
-        String filePath = "key.txt"; // Destination file for the key
-        int keyLength = 128; // AES key length
+        String filePath = "key.txt";
+        int keyLength = 128; //key length
 
         // Generate a temporary key for AESEncryptor instantiation
         byte[] tempKey = new byte[keyLength / 8]; // Divide by 8 to convert bits to bytes
@@ -64,7 +67,7 @@ public class RandomKeyGenerator extends FileOperator {
 
         RandomKeyGenerator keyGenerator = new RandomKeyGenerator(filePath, encryptor, keyLength);
         try {
-            keyGenerator.operateFile(); // Generate the key and write to the file
+            keyGenerator.operateFile(); //write to the file
         } catch (Exception e) {
             e.printStackTrace();
         }

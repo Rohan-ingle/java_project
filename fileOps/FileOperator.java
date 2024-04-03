@@ -1,3 +1,6 @@
+package fileOps;
+
+import encryption.AESEncryptor;
 
 public abstract class FileOperator {
     protected String filePath;
