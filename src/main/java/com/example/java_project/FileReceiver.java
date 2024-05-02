@@ -1,5 +1,5 @@
 package com.example.java_project;
-
+import com.example.java_project.saltHash;
 import com.example.java_project.AESEncryptor;
 import javax.swing.*;
 import java.io.*;
@@ -8,10 +8,13 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
+import java.util.Arrays;
+
+import com.example.java_project.Database;
 
 public class FileReceiver {
 
-    public static void receiveFile(String serverIp, int serverPort) {
+    public static void receiveFile(String serverIp, int serverPort, Database database) {
         try (ServerSocket serverSocket = new ServerSocket(serverPort)) {
             System.out.println("Waiting for connection on port " + serverPort);
 
@@ -24,15 +27,64 @@ public class FileReceiver {
 
                 // Initialize ByteArrayOutputStream to hold the credentials
                 ByteArrayOutputStream credentialStream = new ByteArrayOutputStream();
+                ByteArrayOutputStream saltStream = new ByteArrayOutputStream();
+
                 int data;
                 // Read bytes until a newline is encountered
                 while ((data = inputStream.read()) != -1) {
-                    if ((char) data == '\n') break;  // Stop reading at newline, which signifies end of credentials
+                    if ((char) data == '\n') {
+                        // Stop reading at newline, which signifies end of credentials
+                        break;
+                    }
                     credentialStream.write(data);
                 }
+
+                // Extract username, password hash, and salt from the credentialStream
                 String credentials = credentialStream.toString("UTF-8");
+                String[] parts = credentials.split(";"); //";" is the delimiter
+                String username;
+                String passwordHash;
+                String streamedPassword;
+                String saltString;
+                if (parts.length == 3) {
+                    username = parts[0];
+                    streamedPassword = parts[1];
+                    saltString = parts[2];
+
+                    // Use the extracted values as needed
+                    System.out.println("Username: " + username);
+                    System.out.println("Password to Hash: " + streamedPassword);
+                    System.out.println("Salt: " + saltString);
+                } else {
+                    System.out.println("Invalid credentials format.");
+                    return;
+                }
+
+                String[] saltParts = saltString.substring(1, saltString.length() - 1).split(", ");
+                byte[] salt = new byte[saltParts.length];
+                for (int i = 0; i < saltParts.length; i++) {
+                    // Remove any non-numeric characters, such as "]" from the end of the string
+                    saltParts[i] = saltParts[i].replaceAll("[^\\d-]", "");
+                    salt[i] = Byte.parseByte(saltParts[i]);
+                }
+
+
+
+                String passwordDb = null;
+
+                if(database.userExists(username)) {
+                    passwordDb = database.hashedPassword(username);
+                    System.out.println("User found");
+                }
+                else{
+                    System.out.println("User not found.");
+                    return;
+                }
+
+                passwordHash = Arrays.toString(saltHash.hash(streamedPassword.toCharArray(), salt));
+
                 // Check if the credentials are valid
-                if (!credentials.equals("123")) {  // Assuming "123" is your placeholder for valid credentials
+                if (!passwordDb.equals(passwordHash)) {
                     System.out.println("Invalid credentials");
                     return;  // End the function if credentials are invalid
                 }
@@ -55,12 +107,12 @@ public class FileReceiver {
                         fileNameStream.write(byteRead);
                     }
                 } else {
-                    System.out.println("No data available to read");
+                    System.out.println("No data available to stream or finished streaming name buffer");
                 }
 
 
                 while ((byteRead = inputStream.read()) != -1) {
-                    System.out.print("Running while loop");
+                    System.out.print("Writing name buffer\n");
                     if ((char) byteRead == '\n') break;
                     fileNameStream.write(byteRead);
                 }
@@ -95,29 +147,15 @@ public class FileReceiver {
 
     public static void main(String[] args) {
 
-        //
-        //
-        //
-        // Testing H2 databse with JDBC [IGNORE]
-        try {
-            Class.forName("org.h2.Driver");
-            try (Connection connection = DriverManager.getConnection("jdbc:h2:~/test", "admin", "admin");
-                 Statement statement = connection.createStatement()) {
-                ResultSet execute = statement.executeQuery("SELECT 3*4");
-                if (execute.next()) {
-                    System.out.println(execute.getString(1));
-                }
-            }
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        }
+        Database database = new Database();
+        database.establishConnection();
 
-        //
-        //
-        //
-        // Main init
+        // Main initialization
         String serverIp = "127.0.0.1";  // For local connection for testing purposes or LAN
         int serverPort = 8080;
-        receiveFile(serverIp, serverPort);
+        receiveFile(serverIp, serverPort, database);
+
+        // Close the database connection
+        database.closeConnection();
     }
 }

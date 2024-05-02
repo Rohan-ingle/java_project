@@ -1,0 +1,11 @@
+- Remove decryption from server side
+- Login system
+- client side option to CRUD
+-- Create : done
+-- Read : Done
+-- Update : Done
+-- Delete : Done
+- Per user received_file folder
+- Call hashing function
+- UI
+- Ngrok (optional)

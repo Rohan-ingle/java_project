@@ -1,50 +1,196 @@
 package com.example.java_project;
 
 import java.sql.*;
+import java.util.UUID;
 
-public class Database {
+public class Database implements interfaceDb {
 
     // Define connection as a class member to make it accessible throughout the Database class
     private Connection connection;
+    private static final String DB_FILE_PATH = "./src/main/java/com/example/java_project/database";
 
-    public static void main(String[] args) {
-        Database db = new Database();
+
+    @Override
+    public void establishConnection() {
         try {
-            // Load the JDBC driver for the H2 database
+            String url = "jdbc:h2:" + DB_FILE_PATH;
+
+            // Load the H2 driver
             Class.forName("org.h2.Driver");
 
-            // Create a connection to the database
-            db.connection = DriverManager.getConnection("jdbc:h2:~/test", "admin", "admin");
+            // Establish the connection
+            connection = DriverManager.getConnection(url, "admin", "admin");
+            Statement statement = connection.createStatement();
 
-            // Perform query
-            db.performQuery();
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS Users (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "username VARCHAR(255) UNIQUE," +
+                    "password_hash VARCHAR(255)" +
+                    ")";
+            statement.executeUpdate(createTableSQL);
+            System.out.println("Table created");
         } catch (ClassNotFoundException | SQLException e) {
-            System.out.println("An error occurred: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void closeConnection() {
+        try {
+            if (connection != null) {
+                connection.close();
+                System.out.println("Connection closed");
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to close the connection: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateDb(String oldUsername, String newUsername, String newPassword) {
+        try {
+            // Update the username and password in the database
+            String updateSql = "UPDATE Users SET username = ?, password_hash = ? WHERE username = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateSql)) {
+                preparedStatement.setString(1, newUsername);
+                preparedStatement.setString(2, newPassword);
+                preparedStatement.setString(3, oldUsername);
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("User updated successfully");
+                } else {
+                    System.out.println("User with username '" + oldUsername + "' not found");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void deleteDb(String username) {
+        try {
+            // Delete the user from the database
+            String deleteSql = "DELETE FROM Users WHERE username = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSql)) {
+                preparedStatement.setString(1, username);
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("User deleted successfully");
+                } else {
+                    System.out.println("User with username '" + username + "' not found");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void createDb(String username, String hashedPassword) {
+        try {
+            // Check if the user already exists
+            String query = "SELECT COUNT(*) AS count FROM Users WHERE username = ?";
+            try (PreparedStatement checkStatement = connection.prepareStatement(query)) {
+                checkStatement.setString(1, username);
+                ResultSet resultSet = checkStatement.executeQuery();
+                if (resultSet.next()) {
+                    int count = resultSet.getInt("count");
+                    if (count > 0) {
+                        System.out.println("User already exists");
+                        return; // Exit the method if the user already exists
+                    }
+                }
+            }
+
+            // Generate a unique ID for the user
+            String userId = UUID.randomUUID().toString();
+
+            // Insert the user into the database
+            String insertUserSQL = "INSERT INTO Users (id, username, password_hash) VALUES (?, ?, ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL)) {
+                preparedStatement.setString(1, userId);
+                preparedStatement.setString(2, username);
+                preparedStatement.setString(3, hashedPassword);
+                preparedStatement.executeUpdate();
+                System.out.println("User created");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public String hashedPassword(String username) throws SQLException {
+        String passwordHash = null;
+        String query = "SELECT password_hash FROM Users WHERE username = ?";
+        ResultSet resultSet = null;
+        PreparedStatement preparedStatement = null;
+        try {
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, username);
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                passwordHash = resultSet.getString("password_hash");
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Ensure the connection is closed after usage
             try {
-                if (db.connection != null) db.connection.close();
+                if (resultSet != null) resultSet.close();
+                if (preparedStatement != null) preparedStatement.close();
             } catch (SQLException e) {
-                System.out.println("Failed to close the connection: " + e.getMessage());
+                e.printStackTrace();
             }
         }
+        return passwordHash;
     }
 
-    public void performQuery() throws SQLException {
-        // Create a statement to execute SQL queries
-        Statement statement = connection.createStatement();
+    @Override
+    public String getUUID(String username) throws SQLException {
+        String uuid = null;
+        String query = "SELECT id FROM Users WHERE username = ?";
+        ResultSet resultSet = null;
+        PreparedStatement preparedStatement = null;
+        try {
 
-        // Execute a query and get the result set
-        ResultSet resultSet = statement.executeQuery("SELECT 3*4");
-
-        // Process the result set
-        while (resultSet.next()) {
-            System.out.println(resultSet.getString(1)); // Print the result of 3*4
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, username);
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                uuid = resultSet.getString("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) resultSet.close();
+                if (preparedStatement != null) preparedStatement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
-        // Close all resources to avoid memory leaks
-        resultSet.close();
-        statement.close();
+        return uuid;
     }
+
+    @Override
+    public boolean userExists(String username) throws SQLException {
+        String query = "SELECT COUNT(*) AS count FROM Users WHERE username = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    int count = resultSet.getInt("count");
+                    return count > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Return false by default if an exception occurs
+    }
+
+
 }
