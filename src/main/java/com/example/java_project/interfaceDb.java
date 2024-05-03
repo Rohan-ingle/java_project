@@ -18,4 +18,6 @@ public interface interfaceDb {
     String getUUID(String username) throws SQLException;
 
     boolean userExists(String username) throws SQLException;
+
+    boolean checkCredentials(String username, String hashedPassword, String salt) throws SQLException;
 }
