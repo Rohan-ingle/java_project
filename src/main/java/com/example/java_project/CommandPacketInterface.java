@@ -10,13 +10,13 @@ public interface CommandPacketInterface {
 
     String Create(String Username, String Password, Socket socket);
 
-    String sendFileCommand(String Username, String Password, Socket socket, String filepath);
+    String sendFileCommand(String Username, Socket socket);
 
     void CloseConnection(Socket socket);
 
     void SendCommand(Socket socket, String command);
 
-    void SendFile(Socket socket, String filePath);
+    void SendFile(String filePath);
 
     void login(String Username, String Password, String salt, Socket socket);
 }

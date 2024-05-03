@@ -5,6 +5,7 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/../Java/javafx-sdk-22.0.1/lib/JavaFX/pom.xml" />
       </list>
     </option>
   </component>

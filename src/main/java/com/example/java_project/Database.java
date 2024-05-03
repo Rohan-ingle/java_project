@@ -24,6 +24,7 @@ public class Database implements interfaceDb {
             connection = DriverManager.getConnection(url, "admin", "admin");
             Statement statement = connection.createStatement();
 
+
             String createTableSQL = "CREATE TABLE IF NOT EXISTS Users (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "username VARCHAR(255) UNIQUE," +
@@ -220,19 +221,14 @@ public class Database implements interfaceDb {
         byte[] providedHash = salthash.hash(password.toCharArray(), saltBytes);
         System.out.println("Provided hash: " + Arrays.toString(providedHash));
 
-//         Retrieve the stored hashed password from the database
+        // Retrieve the stored hashed password from the database
         String query = "SELECT password_hash FROM Users WHERE username = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, username);
-            System.out.println("Query: " + query);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    System.out.println("Attempting get string");
                     String storedHashedPassword = resultSet.getString("password_hash");
                     System.out.println("Stored hashed password: " + storedHashedPassword);
-
-                    // Convert the stored hashed password from Base64 string to byte array
-                    System.out.println("Stored hash: " + storedHashedPassword);
 
 
                     // Check if the provided password hash matches the stored hashed password
@@ -244,8 +240,61 @@ public class Database implements interfaceDb {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
+
+//    //         Retrieve the stored hashed password from the database
+//    String query = "SELECT password_hash FROM Users WHERE username = ?";
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+//        preparedStatement.setString(1, username);
+//        System.out.println("Query: " + query);
+//        try (ResultSet resultSet = preparedStatement.executeQuery()) {
+//            if (resultSet.next()) {
+//                System.out.println("Attempting get string");
+//                String storedHashedPassword = resultSet.getString("password_hash");
+//                System.out.println("Stored hashed password: " + storedHashedPassword);
+//
+//                // Convert the stored hashed password from Base64 string to byte array
+//                byte[] storedHash = Base64.getDecoder().decode(storedHashedPassword);
+//                System.out.println("Stored hash: " + Arrays.toString(storedHash));
+//
+//                // Check if the provided password hash matches the stored hashed password
+//                boolean match = Arrays.equals(providedHash, storedHash);
+//                System.out.println("Password match: " + match);
+//                return match;
+//            }
+//        }
+//    } catch (SQLException e) {
+//        e.printStackTrace();
+//    }
+
+//    public static byte[] stringToByte(String str) {
+//        byte[] byteArray = new byte[str.length()];
+//        for (int i = 0; i < str.length(); i++) {
+//            byteArray[i] = (byte) str.charAt(i); // Convert char to byte
+//        }
+//        return byteArray;
+//    }
+//
+//    public static String bytesToHex(byte[] bytes) {
+//        StringBuilder result = new StringBuilder();
+//        for (byte b : bytes) {
+//            result.append(String.format("%02X", b));
+//        }
+//        return result.toString();
+//    }
+//
+//    public static byte[] hexToBytes(String hexString) {
+//        if (hexString.length() % 2 != 0) {
+//            throw new IllegalArgumentException("Invalid hexadecimal string length");
+//        }
+
+//        byte[] byteArray = new byte[hexString.length() / 2];
+//        for (int i = 0; i < hexString.length(); i += 2) {
+//            String hexByte = hexString.substring(i, i + 2);
+//            byteArray[i / 2] = (byte) Integer.parseInt(hexByte, 16);
+//        }
+//        return byteArray;
+//    }
 }

@@ -66,7 +66,7 @@ public class FileSenderGUI extends JFrame {
 //        String filePath = filePathField.getText();
 
         String serverIp = "127.0.0.1";
-        int serverPort = 8080;
+        int serverPort = 5050;
         String filePath = "D:\\wallpapers\\island-house-sunset-scenery-digital-art-4k-wallpaper-uhdpaper.com-269@0@j.jpg";
 //        String login = "root;mySecretPassword;[-3, -30, -18, 105, 42, -86, -107, -109, 11, 38, -72, 64, 1, 39, -56, 26]";
 

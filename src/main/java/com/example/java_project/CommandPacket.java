@@ -1,24 +1,49 @@
 package com.example.java_project;
+import com.example.java_project.fileSenderNoGUI;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import com.example.java_project.AESEncryptor;
+
+import javax.swing.*;
 
 public class CommandPacket implements CommandPacketInterface {
 
     @Override
     public String Update(String Username, String Password, String NewUsername, String NewPassword, Socket socket) {
+//        saltHash Hash = new saltHash();
+//
+//        byte[] Salt = Hash.getSalt();
+//        byte[] NewPasswordHashedBytes = Hash.hash(NewPassword.toCharArray(), Salt);
+//        String NewPasswordHashed = bytesToHex(NewPasswordHashedBytes); // Convert byte array to hexadecimal string
+//        String saltString = bytesToHex(Salt); // Convert salt byte array to hexadecimal string
 
-        saltHash hash = new saltHash();
-
-        String Salt = Arrays.toString(hash.getSalt());
-        String CredString = "UpdateUser"+ ";" +NewUsername + ";" + NewPassword+ ";" + Salt + "\n";
+        String CredString = "UpdateUser" + ";" + NewUsername + ";" + NewPassword + ";" + NewPassword + "\n";
         SendCommand(socket, CredString);
+        System.out.println("New Creds Hashed: " + CredString);
         return CredString;
     }
+
+//    public static byte[] stringToByte(String str) {
+//        byte[] byteArray = new byte[str.length()];
+//        for (int i = 0; i < str.length(); i++) {
+//            byteArray[i] = (byte) str.charAt(i); // Convert char to byte
+//        }
+//        return byteArray;
+//    }
+//
+//    public static String bytesToHex(byte[] bytes) {
+//        StringBuilder result = new StringBuilder();
+//        for (byte b : bytes) {
+//            result.append(String.format("%02X", b));
+//        }
+//        return result.toString();
+//    }
+
 
     @Override
     public String Delete(String Username, Socket socket) {
@@ -36,11 +61,11 @@ public class CommandPacket implements CommandPacketInterface {
     }
 
     @Override
-    public String sendFileCommand(String Username, String Password, Socket socket, String filepath){
-        String SendFileCommand = "SendFile" + ";" + Username + ";" + Password + "\n";
-        SendCommand(socket, SendFileCommand);
-        SendFile(socket, filepath);
-        return SendFileCommand;
+    public String sendFileCommand(String Username, Socket socket){
+//        String SendFileCommand = "ReceiveFile" + ";" + Username + ";" + "\n";
+//        SendCommand(socket, SendFileCommand);
+//        SendFile(socket, filepath);
+        return "SendFileCommand";
     }
 
     @Override
@@ -65,22 +90,15 @@ public class CommandPacket implements CommandPacketInterface {
     }
 
     @Override
-    public void SendFile(Socket socket, String filePath) {
-        try {
-            OutputStream outputStream = socket.getOutputStream();
-            // Read file content and send it in chunks
-            byte[] buffer = new byte[1024];
-            try (InputStream fileInputStream = new FileInputStream(filePath)) {
-                int bytesRead;
-                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-            }
+    public void SendFile(String filePath) {
 
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        fileSenderNoGUI sendfile = new fileSenderNoGUI();
+
+        sendfile.sendFile("127.0.0.1", 5050, "D:/wallpapers/astronaut-cat-moon-digital-art-4k-wallpaper-uhdpaper.com-261@0@j.jpg");
+
     }
+
+
 
     @Override
     public void login(String Username, String Password, String salt, Socket socket) {
