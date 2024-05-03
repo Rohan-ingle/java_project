@@ -3,56 +3,77 @@ package com.example.java_project;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import java.io.File;
+
+import java.util.regex.Pattern;
 
 public class Main extends Application {
 
-    private Stage primaryStage;
-    private Label filePathLabel;
-
     @Override
     public void start(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        primaryStage.setTitle("JavaFX File Chooser");
+        primaryStage.setTitle("Welcome");
 
-        // Sign-in Page
-        VBox signInPage = new VBox(10);
-        signInPage.setPadding(new Insets(10));
-        signInPage.getChildren().add(new Label("Sign In Page"));
+        Label welcomeLabel = new Label("Welcome to the application!");
 
-        // Main Application Page
-        VBox mainPage = new VBox(10);
-        mainPage.setPadding(new Insets(10));
-        Button openFileChooserButton = new Button("Open File Chooser");
-        filePathLabel = new Label();
-        openFileChooserButton.setOnAction(e -> openFileChooser());
-        mainPage.getChildren().addAll(openFileChooserButton, filePathLabel);
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Connect to Server");
 
-        // Initially show the sign-in page
-        Scene scene = new Scene(signInPage, 300, 200);
+        // Set the button types.
+        ButtonType connectButtonType = new ButtonType("Connect", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(connectButtonType, ButtonType.CANCEL);
 
-        // Change to the main page after signing in
-        signInPage.setOnMouseClicked(event -> primaryStage.setScene(new Scene(mainPage, 300, 200)));
+        // Create the IP and Port labels and fields.
+        Label ipLabel = new Label("IP:");
+        Label portLabel = new Label("Port:");
+        TextField ipTextField = new TextField();
+        TextField portTextField = new TextField();
 
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
+        // Add IP and Port fields to the dialog layout.
+        GridPane grid = new GridPane();
+        grid.add(ipLabel, 0, 0);
+        grid.add(ipTextField, 1, 0);
+        grid.add(portLabel, 0, 1);
+        grid.add(portTextField, 1, 1);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
-    private void openFileChooser() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Choose a File");
-        File selectedFile = fileChooser.showOpenDialog(primaryStage);
-        if (selectedFile != null) {
-            filePathLabel.setText("Selected File: " + selectedFile.getAbsolutePath());
-        } else {
-            filePathLabel.setText("No file selected");
-        }
+        // Enable/disable connect button based on input validity
+        Button connectButton = (Button) dialog.getDialogPane().lookupButton(connectButtonType);
+        connectButton.setDisable(true);
+
+        // Validation for IP and Port fields
+        Pattern ipPattern = Pattern.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+        Pattern portPattern = Pattern.compile("^\\d{1,5}$");
+
+        ipTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            connectButton.setDisable(!ipPattern.matcher(newValue).matches() || !portPattern.matcher(portTextField.getText()).matches());
+        });
+
+        portTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            connectButton.setDisable(!portPattern.matcher(newValue).matches() || !ipPattern.matcher(ipTextField.getText()).matches());
+        });
+
+        // Add grid to dialog pane
+        dialog.getDialogPane().setContent(grid);
+
+        // Convert the result to IP:Port when the connect button is clicked.
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == connectButtonType) {
+                return ipTextField.getText() + ":" + portTextField.getText();
+            }
+            return null;
+        });
+
+        // Show the dialog
+        dialog.showAndWait().ifPresent(result -> {
+            System.out.println("Connect to: " + result);
+            // You can perform connection logic here with the entered IP and Port
+        });
+
+
     }
 
     public static void main(String[] args) {
