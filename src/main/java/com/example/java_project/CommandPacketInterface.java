@@ -1,5 +1,6 @@
 package com.example.java_project;
 
+import java.net.ConnectException;
 import java.net.Socket;
 
 public interface CommandPacketInterface {
@@ -10,13 +11,13 @@ public interface CommandPacketInterface {
 
     String Create(String Username, String Password, Socket socket);
 
-    String sendFileCommand(String Username, Socket socket);
-
-    void CloseConnection(Socket socket);
+    String sendFileCommand(Socket socket);
 
     void SendCommand(Socket socket, String command);
 
-    void SendFile(String filePath);
+    void SendFile(String filePath) throws ConnectException;
 
     void login(String Username, String Password, String salt, Socket socket);
+
+    String CloseConnection(Socket socket);
 }

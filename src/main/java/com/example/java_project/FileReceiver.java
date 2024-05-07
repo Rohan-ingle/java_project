@@ -13,6 +13,7 @@ import java.sql.*;
 import java.util.Arrays;
 
 import com.example.java_project.Database;
+import javafx.application.Platform;
 
 ////public class FileReceiver {
 ////
@@ -264,6 +265,7 @@ public class FileReceiver {
                 String loggedUser = null;
 
                 while (keepConnectionOpen) {
+                    database.establishConnection();
                     // Read the command packet until a newline character is encountered
                     ByteArrayOutputStream commandPacketStream = new ByteArrayOutputStream();
                     int commandPacketByte;
@@ -276,6 +278,7 @@ public class FileReceiver {
 
                     // Convert the command packet to a string
                     String commandPacket = commandPacketStream.toString("UTF-8").trim();
+                    System.out.println(commandPacket);
 
                     // Run regex to parse the command packet and extract its parts
                     String[] commandPacketParts = commandPacket.split(";");
@@ -283,37 +286,61 @@ public class FileReceiver {
                     // Check the command and perform actions accordingly
                     if (commandPacketParts[0].equals("CreateUser") && !receivingFiles) {
                         // Perform actions for creating a user
+//                        database.establishConnection();
                         System.out.println("Creating User");
-                        database.createDb(commandPacketParts[1], commandPacketParts[2]);
+                        database.createDb(commandPacketParts[1], commandPacketParts[2],serverIp,serverPort);
+                        database.closeConnection();
                     } else if (commandPacketParts[0].equals("Login")) {
                         // Perform actions for deleting a user
+//                        database.establishConnection();
+//                        if(loggedIn){
+//                            getFile.receiveFile("127.0.0.1", 5050, database);
+//                            database.closeConnection();
+//                        }
                         if (database.checkCredentials(commandPacketParts[1], commandPacketParts[2], commandPacketParts[3])) {
                             loggedIn = true;
                             loggedUser = commandPacketParts[1];
                             System.out.println("Logged in");
+//                            getFile.receiveFile("127.0.0.1", 5050, database);
+//                            database.closeConnection();
+
                         }
 
                     } else if (commandPacketParts[0].equals("Logout") && !receivingFiles) {
                         // Perform actions for updating a user
                         loggedIn = false;
                     }
-//                    else if (commandPacketParts[0].equals("ReceiveFile")) {
-//                        System.out.println("Receiving file");
-//                        receivingFiles = true;
-//                        getFile.receiveFile("127.0.0.1", 5050); // Call the method from getFile class
-//                        receivingFiles = false;
-//
-//                    }
-                    else if (commandPacketParts[0].equals("DeleteUser") && loggedIn) {
-                        // Perform actions for deleting a user
-                        database.deleteDb(commandPacketParts[1]);
-                    } else if (commandPacketParts[0].equals("UpdateUser") && loggedIn) {
-                        // Perform actions for updating a user
-                        database.updateDb(loggedUser, commandPacketParts[1], commandPacketParts[2]);
-                    } else if (commandPacketParts[0].equals("CloseConnection") && !receivingFiles) {
-                        keepConnectionOpen = false;
-                        System.out.println("Closing connection.");
+                    else if (commandPacketParts[0].equals("ReceiveFile")) {
+                        System.out.println("Receiving file {~FileReceiver}");
+                        receivingFiles = true;
+//                        database.establishConnection();
+                        getFile.receiveFile("127.0.0.1", 5050, database); // Call the method from getFile class
                         database.closeConnection();
+
+                        receivingFiles = false;
+
+                    }
+                    else if (commandPacketParts[0].equals("DeleteUser") && loggedIn) {
+
+                        // Perform actions for deleting a user
+//                        database.establishConnection();
+                        database.deleteDb(commandPacketParts[1]);
+                        database.closeConnection();
+
+                    } else if (commandPacketParts[0].equals("UpdateUser") && loggedIn) {
+
+                        // Perform actions for updating a user
+//                        database.establishConnection();
+                        database.updateDb(loggedUser, commandPacketParts[1], commandPacketParts[2]);
+                        database.closeConnection();
+
+                    } else if (commandPacketParts[0].equals("CloseConnection")) {
+
+                        System.out.println("Closing connection.");
+                        keepConnectionOpen = false;
+                        database.closeConnection();
+                        Platform.exit();
+
                     } else {
                         System.out.println("Unknown command packet");
                     }

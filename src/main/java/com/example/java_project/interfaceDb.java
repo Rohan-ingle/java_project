@@ -11,7 +11,7 @@ public interface interfaceDb {
 
     void deleteDb(String username) throws SQLException;
 
-    void createDb(String username, String hashedPassword) throws SQLException;
+    void createDb(String username, String hashedPassword, String IP, int port) throws SQLException;
 
     String hashedPassword(String username) throws SQLException;
 

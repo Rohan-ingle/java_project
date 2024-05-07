@@ -1,6 +1,7 @@
 package com.example.java_project;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,7 +9,7 @@ import java.nio.file.Paths;
 
 public class fileSenderNoGUI {
 
-    public static void sendFile(String serverIp, int serverPort, String filePath) {
+    public static void sendFile(String serverIp, int serverPort, String filePath) throws ConnectException {
         try (Socket socket = new Socket(serverIp, serverPort);
              OutputStream outputStream = socket.getOutputStream();
              InputStream inputStream = socket.getInputStream()) {
@@ -57,11 +58,13 @@ public class fileSenderNoGUI {
             }
 
             System.out.println("File sent successfully.");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.err.println("Error sending file: " + ex.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error sending file: " + e.getMessage());
+            throw new ConnectException("Failed to connect to the server"); // Throw ConnectException
         }
     }
+
 
 //    public static void main(String[] args) {
 //        String serverIp = "127.0.0.1";

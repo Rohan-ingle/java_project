@@ -32,6 +32,17 @@ public class Database implements interfaceDb {
                     ")";
             statement.executeUpdate(createTableSQL);
             System.out.println("Table created");
+
+            String createTableSQL1 = "CREATE TABLE IF NOT EXISTS ServerInfo (" +
+                    "ServerID VARCHAR(36) PRIMARY KEY," +
+                    "id VARCHAR(36)," +
+                    "IP VARCHAR(50) NOT NULL," +
+                    "Port INT NOT NULL," +
+                    "FOREIGN KEY (id) REFERENCES Users(id)"+
+                    ")";
+            statement.executeUpdate(createTableSQL1);
+            System.out.println("Table1 created");
+
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
@@ -90,7 +101,7 @@ public class Database implements interfaceDb {
     }
 
     @Override
-    public void createDb(String username, String hashedPassword) {
+    public void createDb(String username, String hashedPassword, String IP, int port) {
         try {
             // Check if the user already exists
             String query = "SELECT COUNT(*) AS count FROM Users WHERE username = ?";
@@ -117,6 +128,65 @@ public class Database implements interfaceDb {
                 preparedStatement.setString(3, hashedPassword);
                 preparedStatement.executeUpdate();
                 System.out.println("User created");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Table 2
+        try {
+            // Get the user ID based on the username
+            String getUserIdQuery = "SELECT id FROM Users WHERE username = ?";
+            try (PreparedStatement getUserIdStatement = connection.prepareStatement(getUserIdQuery)) {
+                getUserIdStatement.setString(1, username);
+                ResultSet userIdResult = getUserIdStatement.executeQuery();
+
+                if (userIdResult.next()) {
+                    String userId = userIdResult.getString("id");
+                    System.out.println(userId);
+                    // Insert server information into the ServerInfo table
+//                    String insertServerInfoSQL = "INSERT INTO ServerInfo (id, IP, Port) VALUES (?, ?, ?)";
+                    String insertServerInfoSQL = "INSERT INTO ServerInfo (ServerID, id, IP, Port) VALUES (?, ?, ?, ?)";
+                    try (PreparedStatement insertServerInfoStatement = connection.prepareStatement(insertServerInfoSQL)) {
+                        String ser_id = UUID.randomUUID().toString();
+                        insertServerInfoStatement.setString(1, ser_id);
+                        insertServerInfoStatement.setString(2, userId);
+                        insertServerInfoStatement.setString(3, IP);
+                        insertServerInfoStatement.setInt(4, port);
+                        insertServerInfoStatement.executeUpdate();
+                        System.out.println("Server info created");
+                    }
+
+                } else {
+                    System.out.println("User not found");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void createServerInfo(String username, String IP, int port) {
+        try {
+            // Get the user ID based on the username
+            String getUserIdQuery = "SELECT id FROM Users WHERE username = ?";
+            try (PreparedStatement getUserIdStatement = connection.prepareStatement(getUserIdQuery)) {
+                getUserIdStatement.setString(1, username);
+                ResultSet userIdResult = getUserIdStatement.executeQuery();
+
+                if (userIdResult.next()) {
+                    String userId = userIdResult.getString("id");
+
+                    // Insert server information into the ServerInfo table
+                    String insertServerInfoSQL = "INSERT INTO ServerInfo (id, IP, Port) VALUES (?, ?, ?)";
+                    try (PreparedStatement insertServerInfoStatement = connection.prepareStatement(insertServerInfoSQL)) {
+                        insertServerInfoStatement.setString(1, userId);
+                        insertServerInfoStatement.setString(2, IP);
+                        insertServerInfoStatement.setInt(3, port);
+                        insertServerInfoStatement.executeUpdate();
+                        System.out.println("Server info created");
+                    }
+                } else {
+                    System.out.println("User not found");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

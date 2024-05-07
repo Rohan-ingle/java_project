@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.UUID;
 
 import com.example.java_project.Database;
 
@@ -17,9 +18,6 @@ public class getFile {
     public static void receiveFile(String serverIp, int serverPort, Database database) {
         try (ServerSocket serverSocket = new ServerSocket(serverPort)) {
             System.out.println("Waiting for connection on port " + serverPort);
-
-            File directory = new File("src/main/java/com/example/java_project/received_files");
-            if (!directory.exists()) directory.mkdirs();
 
             try (Socket socket = serverSocket.accept();
                  InputStream inputStream = socket.getInputStream()) {
@@ -33,7 +31,7 @@ public class getFile {
                 // Read bytes until a newline is encountered
                 while ((data = inputStream.read()) != -1) {
                     if ((char) data == '\n') {
-                        // Stop reading at newline, which signifies end of credentials
+                        // Stop reading at newline
                         break;
                     }
                     credentialStream.write(data);
@@ -46,12 +44,16 @@ public class getFile {
                 String passwordHash;
                 String streamedPassword;
                 String saltString;
+                String UUID = null;
+                File directory = null;
+
+
                 if (parts.length == 3) {
                     username = parts[0];
                     streamedPassword = parts[1];
                     saltString = parts[2];
 
-                    // Use the extracted values as needed
+
                     System.out.println("Username: " + username);
                     System.out.println("Password to Hash: " + streamedPassword);
                     System.out.println("Salt: " + saltString);
@@ -63,7 +65,7 @@ public class getFile {
                 String[] saltParts = saltString.substring(1, saltString.length() - 1).split(", ");
                 byte[] salt = new byte[saltParts.length];
                 for (int i = 0; i < saltParts.length; i++) {
-                    // Remove any non-numeric characters, such as "]" from the end of the string
+                    // clean string
                     saltParts[i] = saltParts[i].replaceAll("[^\\d-]", "");
                     salt[i] = Byte.parseByte(saltParts[i]);
                 }
@@ -75,6 +77,8 @@ public class getFile {
                 if(database.userExists(username)) {
                     passwordDb = database.hashedPassword(username);
                     System.out.println("User found");
+                    UUID = database.getUUID(username);
+                    System.out.println("UUID: " + UUID);
                 }
                 else{
                     System.out.println("User not found.");
@@ -92,6 +96,19 @@ public class getFile {
                 outputStream.write('1');
 
                 System.out.println("Valid credentials received.");
+
+                if(UUID == null) {
+                    System.out.println("UUID is null");
+                    return;
+                }
+
+                try {
+                    directory = new File("src/main/java/com/example/java_project/received_files/" + UUID);
+                    if (!directory.exists()) directory.mkdirs();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 System.out.println("Connection Accepted , receiving files");
                 // Receive file name
@@ -145,17 +162,17 @@ public class getFile {
         }
     }
 
-    public static void main(String[] args) {
-
-        Database database = new Database();
-        database.establishConnection();
-
-        // Main initialization
-        String serverIp = "127.0.0.1";  // For local connection for testing purposes or LAN
-        int serverPort = 5050;
-        receiveFile(serverIp, serverPort, database);
-
-        // Close the database connection
-//        database.closeConnection();
-    }
+//    public static void main(String[] args) {
+//
+//        Database database = new Database();
+//        database.establishConnection();
+//
+//        // Main initialization
+//        String serverIp = "127.0.0.1";  // For local connection for testing purposes or LAN
+//        int serverPort = 5050;
+//        receiveFile(serverIp, serverPort, database);
+//
+//        // Close the database connection
+////        database.closeConnection();
+//    }
 }

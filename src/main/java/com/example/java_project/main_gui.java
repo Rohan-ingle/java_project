@@ -1,7 +1,8 @@
 package com.example.java_project;
+
 import com.example.java_project.CommandPacket;
 import javafx.application.Application;
-import javafx.event.Event;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -45,7 +46,16 @@ public class main_gui extends Application {
 
     CommandPacket commandpacket = new CommandPacket();
     Socket socket;
-
+    public static class UserCreationException extends Exception {
+        public UserCreationException(String message) {
+            super(message);
+        }
+    }
+    public static class ProfileUpdateException extends Exception {
+        public ProfileUpdateException(String message) {
+            super(message);
+        }
+    }
     @Override
     public void start(Stage primaryStage) {
         // Setting the stage to be maximized
@@ -65,6 +75,7 @@ public class main_gui extends Application {
         leftBox.setAlignment(Pos.CENTER);
 
         Image image = new Image("https://fluentdigital.co/wp-content/uploads/2023/01/cybersecurity.png");
+//        Image image = new Image("file:/src/main/java/com/example/java_project/cybersecurity.png");
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(300);
         imageView.setPreserveRatio(true);
@@ -100,8 +111,6 @@ public class main_gui extends Application {
         // Creating the login button
         Button loginButton = new Button("Login");
         loginButton.setOnAction(e -> {
-            // Check login credentials here (for simplicity, we'll just assume login is successful)
-            // For a real application, you would perform authentication here
                     try {
                         global_username = usernameField.getText();
                         global_password = passwordField.getText();
@@ -267,7 +276,7 @@ public class main_gui extends Application {
 
         Button ipInfoButton = new Button("IP INFO");
         Button deleteButton = new Button("DELETE");
-        Button helpButton = new Button("HELP");
+        Button logOutButton = new Button("Logout");
         Button profile = new Button("PROFILE");
 
         // Create and configure the pop-up dialog
@@ -318,7 +327,7 @@ public class main_gui extends Application {
         gridPane.add(new Label("Password:"), 0, 1);
         gridPane.add(passwordField, 1, 1);
 
-        // Enable/Disable save button depending on whether a username and password is entered
+        // Enable/Disable save button
         Node saveButton = editDialog.getDialogPane().lookupButton(saveButtonType);
         saveButton.setDisable(true);
 
@@ -348,6 +357,11 @@ public class main_gui extends Application {
                             System.out.println("New Username: " + usernameField.getText());
                             System.out.println("New Password: " + passwordField.getText());
 
+                            try {
+                                validateProfile(usernameField.getText(),passwordField.getText());
+                            } catch (ProfileUpdateException ex) {
+                                ex.printStackTrace();
+                            }
 
 
                             commandpacket.Update(global_username, global_password, usernameField.getText(), passwordField.getText(), socket);
@@ -439,7 +453,6 @@ public class main_gui extends Application {
                         SuccessAlert.setTitle("Info");
                         SuccessAlert.setHeaderText("Account Deleted Successfully !");
                         SuccessAlert.showAndWait();
-                        // Perform deletion logic here
                         commandpacket.Delete(global_username, socket);
 
                     });
@@ -448,7 +461,7 @@ public class main_gui extends Application {
         });
 
 
-        navRight.getChildren().addAll(ipInfoButton,deleteButton,helpButton,profile);
+        navRight.getChildren().addAll(ipInfoButton,deleteButton,logOutButton,profile);
 
         navLayout.getChildren().addAll(imageView,titleLabel,navRight);
 
@@ -500,10 +513,15 @@ public class main_gui extends Application {
                 filePathLabel.setText("No file selected.");
             }
         });
+        logOutButton.setOnAction(e -> {
+            System.out.println("CloseConnection;\n");
+            commandpacket.CloseConnection(socket);
+            Platform.exit();
+        });
 
         Button sendButton = new Button("Send to Server");
-        sendButton.setOnAction(e ->{
-            String path= null;
+        sendButton.setOnAction(e -> {
+            String path = null;
             String[] filepath_input = filePathLabel.getText().split(":\\s+", 2);
             if (filepath_input.length == 2) {
                 path = filepath_input[1].trim(); // Retrieve the second part and remove leading/trailing whitespace
@@ -512,7 +530,44 @@ public class main_gui extends Application {
                 System.out.println("Invalid input format");
             }
             System.out.println(path);
-            commandpacket.SendFile(path);
+            commandpacket.sendFileCommand(socket);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            // Retry connecting to the server after a certain interval
+            long startTime = System.currentTimeMillis(); // Record the start time
+            long retryInterval = 500; // Retry interval in milliseconds
+            long timeout = 3000; // Timeout period in milliseconds
+
+            while (true) {
+                try {
+                    commandpacket.SendFile(path);
+                    break;
+                } catch (ConnectException ex) {
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - startTime >= timeout) {
+                        System.out.println("Connection attempt timed out after " + (timeout / 1000) + " seconds. Exiting.");
+                        break;
+                    }
+                    System.out.println("Waiting for server to establish connection. Trying again...");
+                    try {
+                        Thread.sleep(retryInterval); // Wait before retrying
+                    } catch (InterruptedException ex1) {
+                        ex1.printStackTrace();
+                    }
+                }
+            }
+
+//            //
+//            if (!connected) {
+//                Platform.exit(); // Exit the JavaFX application
+//            }
+
+
+
         });
         leftTop.getChildren().addAll(sendFileTitle,openFilebutton,filePathLabel,sendButton);
 
@@ -602,12 +657,17 @@ public class main_gui extends Application {
         // Button to submit
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(e -> {
-            // Here you can handle the submission of user data
-            // For simplicity, let's just print the data for now
-            System.out.println("ID: " + nameField.getText());
-            System.out.println("PASSWORD: " + emailField.getText());
-            commandpacket.Create(nameField.getText(), emailField.getText(), socket);
-            popupStage.close();
+            try {
+                validateUserData(nameField.getText(), emailField.getText());
+                System.out.println("ID: " + nameField.getText());
+                System.out.println("PASSWORD: " + emailField.getText());
+                commandpacket.Create(nameField.getText(), emailField.getText(), socket);
+                popupStage.close();
+                popupStage.close();
+            } catch (UserCreationException ex) {
+                // Handle the custom exception
+                System.out.println("Error: " + ex.getMessage());
+            }
         });
         layout.add(submitButton, 1, 2);
 
@@ -617,7 +677,20 @@ public class main_gui extends Application {
         popupStage.showAndWait();
     }
 
+    private void validateUserData(String id, String password) throws UserCreationException {
+        // Perform validation of user data here
+        if (id.isEmpty() || password.isEmpty()) {
+            throw new UserCreationException("ID or Password cannot be empty.");
+        }
+    }
 
+
+    private void validateProfile(String newUsername, String newPassword) throws ProfileUpdateException {
+        // Perform validation of new username and password
+        if (newUsername.isEmpty() || newPassword.isEmpty()) {
+            throw new ProfileUpdateException("Username and password cannot be empty.");
+        }
+    }
     public static void main(String[] args) {
         launch(args);
     }

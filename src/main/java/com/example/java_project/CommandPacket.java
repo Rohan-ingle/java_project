@@ -1,15 +1,8 @@
 package com.example.java_project;
-import com.example.java_project.fileSenderNoGUI;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import com.example.java_project.AESEncryptor;
-
-import javax.swing.*;
 
 public class CommandPacket implements CommandPacketInterface {
 
@@ -61,21 +54,13 @@ public class CommandPacket implements CommandPacketInterface {
     }
 
     @Override
-    public String sendFileCommand(String Username, Socket socket){
-//        String SendFileCommand = "ReceiveFile" + ";" + Username + ";" + "\n";
-//        SendCommand(socket, SendFileCommand);
-//        SendFile(socket, filepath);
+    public String sendFileCommand(Socket socket){
+        String SendFileCommand = "ReceiveFile" + ";" + "\n";
+        SendCommand(socket, SendFileCommand);
         return "SendFileCommand";
     }
 
-    @Override
-    public void CloseConnection(Socket socket) {
-        try {
-            socket.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+
 
     @Override
     public void SendCommand(Socket socket, String command){
@@ -90,19 +75,24 @@ public class CommandPacket implements CommandPacketInterface {
     }
 
     @Override
-    public void SendFile(String filePath) {
+    public void SendFile(String filePath) throws ConnectException{
 
         fileSenderNoGUI sendfile = new fileSenderNoGUI();
 
-        sendfile.sendFile("127.0.0.1", 5050, "D:/wallpapers/astronaut-cat-moon-digital-art-4k-wallpaper-uhdpaper.com-261@0@j.jpg");
+        sendfile.sendFile("127.0.0.1", 5050, filePath);
 
     }
-
-
 
     @Override
     public void login(String Username, String Password, String salt, Socket socket) {
         String LoginString = "Login" + ";" + Username + ";" + Password+ ";" + salt + "\n";
         SendCommand(socket, LoginString);
+    }
+
+    @Override
+    public String CloseConnection(Socket socket){
+        String SendFileCommand = "CloseConnection" + ";" + "\n";
+        SendCommand(socket, SendFileCommand);
+        return "CloseConnection";
     }
 }
