@@ -1,6 +1,9 @@
 package com.example.java_project;
 import com.example.java_project.saltHash;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class HashDebug {
@@ -21,5 +24,12 @@ public class HashDebug {
         System.out.println("Salt: " + Arrays.toString(salt));
         System.out.println("Hashed Password: " + Arrays.toString(hashedPassword));
         System.out.println("Original Password: " + passwordString);
+
+        String credentials = "username" + "," + passwordString + "," + Arrays.toString(salt) + "\n";
+        try {
+            Files.write(Paths.get("src/main/java/com/example/java_project/Credentials.txt"), credentials.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

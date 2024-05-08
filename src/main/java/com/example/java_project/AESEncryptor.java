@@ -14,7 +14,7 @@ public class AESEncryptor implements Encryptable {
             byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
             MessageDigest sha = MessageDigest.getInstance("SHA-256");
             keyBytes = sha.digest(keyBytes);
-            keyBytes = Arrays.copyOf(keyBytes, 16); // Use only the first 128 bits
+            keyBytes = Arrays.copyOf(keyBytes, 16); // Use only the first 128 bits, 16char
             this.secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
             throw new RuntimeException(e);
