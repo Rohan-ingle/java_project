@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 import java.lang.Integer;
 
 
-
 public class main_gui extends Application {
     private Stage primaryStage;
     private Label filePathLabel;
@@ -56,6 +55,7 @@ public class main_gui extends Application {
             super(message);
         }
     }
+  
     @Override
     public void start(Stage primaryStage) {
         // Setting the stage to be maximized
@@ -111,7 +111,7 @@ public class main_gui extends Application {
         // Creating the login button
         Button loginButton = new Button("Login");
         loginButton.setOnAction(e -> {
-                    try {
+                   try {
                         global_username = usernameField.getText();
                         global_password = passwordField.getText();
                         String salt_name = saltField.getText();
@@ -221,7 +221,7 @@ public class main_gui extends Application {
 
         dialog.showAndWait().ifPresent(result -> {
             System.out.println("Connect to: " + result);
-            // You can perform connection logic here with the entered IP and port
+           // You can perform connection logic here with the entered IP and port
 
             try {
                 // Convert the port number to an integer
@@ -245,6 +245,7 @@ public class main_gui extends Application {
                 // Handle the case where the port number text cannot be parsed as an integer
                 System.err.println("Error: Port number is not a valid integer.");
             }
+
 
         });
     }
@@ -277,6 +278,7 @@ public class main_gui extends Application {
         Button ipInfoButton = new Button("IP INFO");
         Button deleteButton = new Button("DELETE");
         Button logOutButton = new Button("Logout");
+
         Button profile = new Button("PROFILE");
 
         // Create and configure the pop-up dialog
@@ -297,6 +299,7 @@ public class main_gui extends Application {
         grid.add(new Label("Email:"), 0, 1);
         grid.add(new Label(""), 1, 1);
 
+
         // Add the labels to the dialog pane
         profileDialog.getDialogPane().setContent(grid);
 
@@ -306,7 +309,7 @@ public class main_gui extends Application {
         // Create text fields for username and password
         TextField usernameField = new TextField();
         usernameField.setPromptText("Enter Username");
-        usernameField.setText(global_username);
+       usernameField.setText(global_username);
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Enter Password");
@@ -327,7 +330,8 @@ public class main_gui extends Application {
         gridPane.add(new Label("Password:"), 0, 1);
         gridPane.add(passwordField, 1, 1);
 
-        // Enable/Disable save button
+       // Enable/Disable save button
+
         Node saveButton = editDialog.getDialogPane().lookupButton(saveButtonType);
         saveButton.setDisable(true);
 
@@ -384,7 +388,7 @@ public class main_gui extends Application {
         ipInfoButton.setOnAction(e ->{
             // Handle NullPointerException
             Alert alert = new Alert(AlertType.INFORMATION);
-            alert.setTitle("Connection Info");
+           alert.setTitle("Connection Info");
             alert.setHeaderText(null);
             alert.setContentText("You are Connected to "+serverIP+":"+serverPort);
             alert.showAndWait();
@@ -406,7 +410,8 @@ public class main_gui extends Application {
 
                     // Create label to display username
                     Label usernameLabel = new Label("Username:");
-                    Label usernameContent = new Label(global_username);
+                   Label usernameContent = new Label(global_username);
+
 
                     // Create password field for input
                     PasswordField passwordField0 = new PasswordField();
@@ -453,7 +458,7 @@ public class main_gui extends Application {
                         SuccessAlert.setTitle("Info");
                         SuccessAlert.setHeaderText("Account Deleted Successfully !");
                         SuccessAlert.showAndWait();
-                        commandpacket.Delete(global_username, socket);
+                       commandpacket.Delete(global_username, socket);
 
                     });
                 }
@@ -462,6 +467,7 @@ public class main_gui extends Application {
 
 
         navRight.getChildren().addAll(ipInfoButton,deleteButton,logOutButton,profile);
+
 
         navLayout.getChildren().addAll(imageView,titleLabel,navRight);
 
@@ -569,6 +575,7 @@ public class main_gui extends Application {
 
 
         });
+      
         leftTop.getChildren().addAll(sendFileTitle,openFilebutton,filePathLabel,sendButton);
 
         VBox leftDown = new VBox();
@@ -657,7 +664,7 @@ public class main_gui extends Application {
         // Button to submit
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(e -> {
-            try {
+           try {
                 validateUserData(nameField.getText(), emailField.getText());
                 System.out.println("ID: " + nameField.getText());
                 System.out.println("PASSWORD: " + emailField.getText());
@@ -668,6 +675,7 @@ public class main_gui extends Application {
                 // Handle the custom exception
                 System.out.println("Error: " + ex.getMessage());
             }
+
         });
         layout.add(submitButton, 1, 2);
 
